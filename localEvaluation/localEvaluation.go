@@ -2,9 +2,11 @@ package localEvaluation
 
 import (
 	"fmt"
+
 	"github.com/LambdaTest/lambda-featureflag-go-sdk/pkg/experiment"
 	"github.com/LambdaTest/lambda-featureflag-go-sdk/pkg/experiment/local"
 	"github.com/joho/godotenv"
+
 	"os"
 	"strconv"
 	"time"
@@ -161,4 +163,9 @@ func GetFeatureFlagPayload(flagName string, user UserProperties) map[string]inte
 func GetFeatureFlagByOrg(user UserProperties) map[string]interface{} {
 	data := getMapOfValue(user)
 	return data
+}
+
+func GetFeatureFlagAllDataByOrg(user UserProperties) map[string]experiment.Variant {
+	result, _ := fetch(user)
+	return result
 }
