@@ -41,7 +41,7 @@ type UserProperties struct {
 	TemplateId       string `json:"template_id,omitempty"`
 }
 
-func init() {
+func Init() {
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Printf("No .env file found")
@@ -67,6 +67,7 @@ func init() {
 }
 
 func Initialize() {
+	Init()
 	config := local.Config{
 		Debug:                          LocalEvaluationConfigDebug,
 		ServerUrl:                      LocalEvaluationConfigServerUrl,
