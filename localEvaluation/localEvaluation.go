@@ -151,9 +151,11 @@ func getValue(flagName string, user UserProperties) Variant {
 func getMapOfValue(user UserProperties) map[string]interface{} {
 	flags := make(map[string]interface{})
 	result, _ := fetch(user)
-	if result != nil && len(result) != 0 {
+	if len(result) != 0 {
 		for k, v := range result {
-			flags[k] = v.Value
+			if v.Value != "" {
+				flags[k] = v.Value
+			}
 		}
 	}
 	return flags
