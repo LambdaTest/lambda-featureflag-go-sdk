@@ -113,7 +113,7 @@ func InitializeWithConfig(conf local.Config, deploymentKey string) {
 	}
 }
 
-func InitializeRootOrg() {
+func InitializeRootOrg() error {
 	initVars()
 	rootOrgClient = rootOrg.NewClient(localEvaluationDeploymentKey, &rootOrg.Config{
 		ServerUrl:                      localEvaluationConfigServerUrl,
@@ -132,8 +132,9 @@ func InitializeRootOrg() {
 	}
 	if err != nil {
 		err = fmt.Errorf("unable to get root orgs with given config %+v with error %s", rootOrgClient.Config, err.Error())
-		panic(err)
+		return err
 	}
+	return nil
 }
 
 func fetch(user UserProperties) (map[string]experiment.Variant, error) {
