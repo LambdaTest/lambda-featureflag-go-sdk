@@ -3,12 +3,12 @@ package rootOrg
 import "time"
 
 type poller struct {
-	shutdown chan bool
+	shutdown chan struct{}
 }
 
 func newPoller() *poller {
 	return &poller{
-		shutdown: make(chan bool),
+		shutdown: make(chan struct{}),
 	}
 }
 

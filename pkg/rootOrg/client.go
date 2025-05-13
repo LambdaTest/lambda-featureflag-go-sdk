@@ -52,8 +52,14 @@ func (c *Client) Evaluate(orgId any) (any, bool) {
 	c.flagsMutex.RLock()
 	defer c.flagsMutex.RUnlock()
 
-	orgIdStr, _ := orgId.(string)
-	orgIdInt, _ := strconv.ParseInt(orgIdStr, 10, 64)
+	orgIdStr, ok := orgId.(string)
+	if !ok {
+		return nil, false
+	}
+	orgIdInt, err := strconv.ParseInt(orgIdStr, 10, 64)
+	if err != nil {
+		return nil, false
+	}
 	org, ok := (*c.flags)[model.OrgId(orgIdInt)]
 	return org, ok
 }
