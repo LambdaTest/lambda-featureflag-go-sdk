@@ -1,0 +1,6 @@
+vendor/
+.idea/
+.vscode/
+.DS_Store
+internal/.DS_Store
+local_evaluation.go
