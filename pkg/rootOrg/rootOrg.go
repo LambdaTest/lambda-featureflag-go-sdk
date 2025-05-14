@@ -61,7 +61,11 @@ func (c *lumsClient) getRootOrgs(apiKey string) (*model.OrgMap, error) {
 
 // GetRootOrgs is a convenience function that uses the default HTTP client
 func GetRootOrgs(apiKey string, url string, timeout time.Duration) (*model.OrgMap, error) {
-	client := newLumsClient(http.DefaultClient, url, timeout)
+	client := newLumsClient(&http.Client{
+		Transport: &http.Transport{
+			DisableKeepAlives: true,
+		},
+	}, url, timeout)
 	result, err := client.getRootOrgs(apiKey)
 	if err != nil {
 		return nil, err

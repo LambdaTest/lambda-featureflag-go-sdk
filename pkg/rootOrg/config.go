@@ -13,5 +13,5 @@ type Config struct {
 var DefaultConfig = &Config{
 	ServerUrl:                      "https://api.lambdatest.com",
 	FlagConfigPollerInterval:       120 * time.Second,
-	FlagConfigPollerRequestTimeout: 60 * time.Second,
+	FlagConfigPollerRequestTimeout: 10 * time.Second,
 }
