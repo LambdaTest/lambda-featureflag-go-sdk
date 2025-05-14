@@ -153,9 +153,7 @@ func getMapOfValue(user UserProperties) map[string]interface{} {
 	result, _ := fetch(user)
 	if result != nil && len(result) != 0 {
 		for k, v := range result {
-			if v.Value != "" {
-				flags[k] = v.Value
-			}
+			flags[k] = v.Value
 		}
 	}
 	return flags
