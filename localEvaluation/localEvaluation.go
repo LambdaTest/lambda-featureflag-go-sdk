@@ -86,6 +86,7 @@ func Initialize() {
 			err = fmt.Errorf("unable to create local evaluation client with given config %+v attempt:%v with error %s", config, i+1, err.Error())
 			continue
 		} else {
+			InitializeRootOrg()
 			break
 		}
 	}
@@ -104,6 +105,7 @@ func InitializeWithConfig(conf local.Config, deploymentKey string) {
 			err = fmt.Errorf("unable to create local evaluation client with given config %+v attempt:%v with error %s", conf, i+1, err.Error())
 			continue
 		} else {
+			InitializeRootOrg()
 			break
 		}
 	}
@@ -114,7 +116,6 @@ func InitializeWithConfig(conf local.Config, deploymentKey string) {
 }
 
 func InitializeRootOrg() error {
-	initVars()
 	rootOrgClient = rootOrg.NewClient(localEvaluationDeploymentKey, &rootOrg.Config{
 		ServerUrl:                      localEvaluationConfigServerUrl,
 		FlagConfigPollerInterval:       time.Duration(localEvaluationConfigPollInterval) * time.Second,
