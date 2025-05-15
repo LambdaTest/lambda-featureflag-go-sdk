@@ -2,23 +2,25 @@ package localEvaluation
 
 import (
 	"fmt"
-
-	"github.com/LambdaTest/lambda-featureflag-go-sdk/pkg/experiment"
-	"github.com/LambdaTest/lambda-featureflag-go-sdk/pkg/experiment/local"
-	"github.com/joho/godotenv"
-
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/joho/godotenv"
+
+	"github.com/LambdaTest/lambda-featureflag-go-sdk/pkg/experiment"
+	"github.com/LambdaTest/lambda-featureflag-go-sdk/pkg/experiment/local"
+	"github.com/LambdaTest/lambda-featureflag-go-sdk/pkg/rootOrg"
 )
 
 var (
 	client                                    *local.Client
-	LocalEvaluationConfigDebug                = true
-	LocalEvaluationConfigServerUrl            = "https://api.lambdatest.com"
-	LocalEvaluationConfigPollInterval         = 120
-	LocalEvaluationConfigPollerRequestTimeout = 60
-	LocalEvaluationDeploymentKey              = "server-jAqqJaX3l8PgNiJpcv9j20ywPzANQQFh"
+	rootOrgClient                             *rootOrg.Client
+	localEvaluationConfigDebug                = true
+	localEvaluationConfigServerUrl            = "https://api.lambdatest.com"
+	localEvaluationConfigPollInterval         = 120
+	localEvaluationConfigPollerRequestTimeout = 60
+	localEvaluationDeploymentKey              = "server-jAqqJaX3l8PgNiJpcv9j20ywPzANQQFh"
 	retries                                   = 5
 )
 
@@ -43,7 +45,7 @@ type UserProperties struct {
 	TemplateId       string `json:"template_id,omitempty"`
 }
 
-func Init() {
+func initVars() {
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Printf("No .env file found")
@@ -52,31 +54,31 @@ func Init() {
 	}
 
 	if os.Getenv("LOCAL_EVALUATION_CONFIG_DEBUG") != "" {
-		LocalEvaluationConfigDebug, _ = strconv.ParseBool(os.Getenv("LOCAL_EVALUATION_CONFIG_DEBUG"))
+		localEvaluationConfigDebug, _ = strconv.ParseBool(os.Getenv("LOCAL_EVALUATION_CONFIG_DEBUG"))
 	}
 	if os.Getenv("LOCAL_EVALUATION_CONFIG_SERVER_URL") != "" {
-		LocalEvaluationConfigServerUrl = os.Getenv("LOCAL_EVALUATION_CONFIG_SERVER_URL")
+		localEvaluationConfigServerUrl = os.Getenv("LOCAL_EVALUATION_CONFIG_SERVER_URL")
 	}
 	if os.Getenv("LOCAL_EVALUATION_CONFIG_POLL_INTERVAL") != "" {
-		LocalEvaluationConfigPollInterval, _ = strconv.Atoi(os.Getenv("LOCAL_EVALUATION_CONFIG_POLL_INTERVAL"))
+		localEvaluationConfigPollInterval, _ = strconv.Atoi(os.Getenv("LOCAL_EVALUATION_CONFIG_POLL_INTERVAL"))
 	}
 	if os.Getenv("LOCAL_EVALUATION_CONFIG_POLLER_REQUEST_TIMEOUT") != "" {
-		LocalEvaluationConfigPollerRequestTimeout, _ = strconv.Atoi(os.Getenv("LOCAL_EVALUATION_CONFIG_POLLER_REQUEST_TIMEOUT"))
+		localEvaluationConfigPollerRequestTimeout, _ = strconv.Atoi(os.Getenv("LOCAL_EVALUATION_CONFIG_POLLER_REQUEST_TIMEOUT"))
 	}
 	if os.Getenv("LOCAL_EVALUATION_DEPLOYMENT_KEY") != "" {
-		LocalEvaluationDeploymentKey = os.Getenv("LOCAL_EVALUATION_DEPLOYMENT_KEY")
+		localEvaluationDeploymentKey = os.Getenv("LOCAL_EVALUATION_DEPLOYMENT_KEY")
 	}
 }
 
 func Initialize() {
-	Init()
+	initVars()
 	config := local.Config{
-		Debug:                          LocalEvaluationConfigDebug,
-		ServerUrl:                      LocalEvaluationConfigServerUrl,
-		FlagConfigPollerInterval:       time.Duration(LocalEvaluationConfigPollInterval) * time.Second,
-		FlagConfigPollerRequestTimeout: time.Duration(LocalEvaluationConfigPollerRequestTimeout) * time.Second,
+		Debug:                          localEvaluationConfigDebug,
+		ServerUrl:                      localEvaluationConfigServerUrl,
+		FlagConfigPollerInterval:       time.Duration(localEvaluationConfigPollInterval) * time.Second,
+		FlagConfigPollerRequestTimeout: time.Duration(localEvaluationConfigPollerRequestTimeout) * time.Second,
 	}
-	client = local.Initialize(LocalEvaluationDeploymentKey, &config)
+	client = local.Initialize(localEvaluationDeploymentKey, &config)
 	var err error
 	for i := 0; i < retries; i++ {
 		err = client.Start()
@@ -84,6 +86,7 @@ func Initialize() {
 			err = fmt.Errorf("unable to create local evaluation client with given config %+v attempt:%v with error %s", config, i+1, err.Error())
 			continue
 		} else {
+			InitializeRootOrg()
 			break
 		}
 	}
@@ -102,6 +105,7 @@ func InitializeWithConfig(conf local.Config, deploymentKey string) {
 			err = fmt.Errorf("unable to create local evaluation client with given config %+v attempt:%v with error %s", conf, i+1, err.Error())
 			continue
 		} else {
+			InitializeRootOrg()
 			break
 		}
 	}
@@ -111,8 +115,31 @@ func InitializeWithConfig(conf local.Config, deploymentKey string) {
 	}
 }
 
+func InitializeRootOrg() error {
+	rootOrgClient = rootOrg.NewClient(localEvaluationDeploymentKey, &rootOrg.Config{
+		ServerUrl:                      localEvaluationConfigServerUrl,
+		FlagConfigPollerInterval:       time.Duration(localEvaluationConfigPollInterval) * time.Second,
+		FlagConfigPollerRequestTimeout: time.Duration(localEvaluationConfigPollerRequestTimeout) * time.Second,
+	})
+	var err error
+	for i := 0; i < retries; i++ {
+		err = rootOrgClient.Start()
+		if err != nil {
+			err = fmt.Errorf("unable to get root orgs with given config %+v attempt:%v with error %s", rootOrgClient.Config, i+1, err.Error())
+			continue
+		} else {
+			break
+		}
+	}
+	if err != nil {
+		err = fmt.Errorf("unable to get root orgs with given config %+v with error %s", rootOrgClient.Config, err.Error())
+		return err
+	}
+	return nil
+}
+
 func fetch(user UserProperties) (map[string]experiment.Variant, error) {
-	userProp := map[string]interface{}{
+	userProp := map[string]any{
 		"org_id":            user.OrgId,
 		"org_name":          user.OrgName,
 		"username":          user.Username,
@@ -128,6 +155,14 @@ func fetch(user UserProperties) (map[string]experiment.Variant, error) {
 		UserProperties: userProp,
 	}
 
+	// Evaluate root org to get the parent org id
+	if expUser.UserProperties["org_id"] != "" && rootOrgClient != nil {
+		rootOrg, ok := rootOrgClient.Evaluate(expUser.UserProperties["org_id"])
+		if ok {
+			expUser.UserProperties["org_id"] = rootOrg
+		}
+	}
+
 	result, err := client.EvaluateV2(&expUser, []string{})
 	if err != nil {
 		return nil, err
@@ -137,7 +172,7 @@ func fetch(user UserProperties) (map[string]experiment.Variant, error) {
 
 func getValue(flagName string, user UserProperties) Variant {
 	result, _ := fetch(user)
-	if result != nil && len(result) != 0 {
+	if len(result) != 0 {
 		if value, ok := result[flagName]; ok {
 			return Variant{
 				Key:     value.Key,
@@ -151,7 +186,7 @@ func getValue(flagName string, user UserProperties) Variant {
 func getMapOfValue(user UserProperties) map[string]interface{} {
 	flags := make(map[string]interface{})
 	result, _ := fetch(user)
-	if result != nil && len(result) != 0 {
+	if len(result) != 0 {
 		for k, v := range result {
 			flags[k] = v.Value
 		}
