@@ -163,6 +163,7 @@ func (c *Client) doFlagsV2() (map[string]*evaluation.Flag, error) {
 	req = req.WithContext(ctx)
 	req.Header.Set("Authorization", fmt.Sprintf("Api-Key %s", c.apiKey))
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("Accept-Encoding", "gzip")
 	req.Header.Set("X-Amp-Exp-Library", fmt.Sprintf("experiment-go-server/%v", experiment.VERSION))
 	resp, err := client.Do(req)
 	if err != nil {
@@ -206,6 +207,7 @@ func (c *Client) doRules() (map[string]interface{}, error) {
 	req = req.WithContext(ctx)
 	req.Header.Set("Authorization", fmt.Sprintf("Api-Key %s", c.apiKey))
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("Accept-Encoding", "gzip")
 	req.Header.Set("X-Amp-Exp-Library", fmt.Sprintf("experiment-go-server/%v", experiment.VERSION))
 	resp, err := c.client.Do(req)
 	if err != nil {
