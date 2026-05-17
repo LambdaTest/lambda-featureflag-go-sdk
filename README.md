@@ -18,8 +18,8 @@ With TestMu AI (Formerly LambdaTest), you can run Go-based feature flag tests ac
 ### Prerequisites
 
 1. Go 1.18 or higher installed.
-2. A TestMu AI account — [sign up here](https://www.testmuai.com/register/).
-3. Your TestMu AI Username and Access Key from the [Automation Dashboard](https://automation.testmuai.com/).
+2. A TestMu AI account — sign up here.
+3. Your TestMu AI Username and Access Key from the Automation Dashboard.
 4. An Amplitude server-side deployment key for feature flag evaluation.
 
 ### Setup
