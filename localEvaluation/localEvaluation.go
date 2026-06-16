@@ -189,3 +189,10 @@ func GetFeatureFlagAllDataByOrg(user UserProperties) map[string]experiment.Varia
 	result, _ := fetch(user)
 	return result
 }
+
+func FetchFlags(flagKeys []string) map[string]*experiment.Flag {
+	if client == nil {
+		return nil
+	}
+	return client.FetchFlags(flagKeys)
+}

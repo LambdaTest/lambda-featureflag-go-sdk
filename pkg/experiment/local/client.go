@@ -254,3 +254,29 @@ func coerceString(value interface{}) string {
 	}
 	return fmt.Sprintf("%v", value)
 }
+
+func (c *Client) FetchFlags(flagKeys []string) map[string]*experiment.Flag {
+	c.flagsMutex.RLock()
+	defer c.flagsMutex.RUnlock()
+
+	result := make(map[string]*experiment.Flag)
+	for _, key := range flagKeys {
+		if f, ok := c.flags[key]; ok {
+			variants := make(map[string]*experiment.Variant)
+			for k, v := range f.Variants {
+				variants[k] = &experiment.Variant{
+					Key:      v.Key,
+					Value:    coerceString(v.Value),
+					Payload:  v.Payload,
+					Metadata: v.Metadata,
+				}
+			}
+			result[f.Key] = &experiment.Flag{
+				Key:      f.Key,
+				Variants: variants,
+				Metadata: f.Metadata,
+			}
+		}
+	}
+	return result
+}
