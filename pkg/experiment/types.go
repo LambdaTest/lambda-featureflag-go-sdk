@@ -27,3 +27,9 @@ type Variant struct {
 	Key      string                 `json:"key,omitempty"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
+
+type Flag struct {
+	Key      string              `json:"key,omitempty"`
+	Variants map[string]*Variant `json:"variants,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
+}
