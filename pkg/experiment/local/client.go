@@ -4,18 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/amplitude/analytics-go/amplitude"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"reflect"
 	"sync"
 
+	"github.com/amplitude/analytics-go/amplitude"
+
 	"github.com/LambdaTest/lambda-featureflag-go-sdk/internal/evaluation"
-
-	"github.com/LambdaTest/lambda-featureflag-go-sdk/pkg/experiment"
-
 	"github.com/LambdaTest/lambda-featureflag-go-sdk/internal/logger"
+	"github.com/LambdaTest/lambda-featureflag-go-sdk/pkg/experiment"
 )
 
 var clients = map[string]*Client{}
