@@ -7,23 +7,19 @@ import (
 
 func topologicalSort(flags map[string]*evaluation.Flag, flagKeys []string) ([]*evaluation.Flag, error) {
 	result := make([]*evaluation.Flag, 0)
-	// Extract keys and copy flags map
-	keys := make([]string, 0)
-	available := make(map[string]*evaluation.Flag)
-	for k, v := range flags {
-		keys = append(keys, k)
-		available[k] = v
-	}
 	// Get the starting keys
-	var startingKeys []string
-	if len(flagKeys) > 0 {
-		startingKeys = flagKeys
-	} else {
-		startingKeys = keys
+	startingKeys := flagKeys
+	if len(startingKeys) == 0 {
+		startingKeys = make([]string, 0, len(flags))
+		for k := range flags {
+			startingKeys = append(startingKeys, k)
+		}
 	}
+	// Track sorted flags instead of copying the flags map, so evaluating a few flags does not cost a copy of all of them
+	visited := make(map[string]struct{}, len(startingKeys))
 	// Sort into result
 	for _, flagKey := range startingKeys {
-		traversal, err := parentTraversal(flagKey, available, []string{})
+		traversal, err := parentTraversal(flagKey, flags, visited, []string{})
 		if err != nil {
 			return nil, err
 		}
@@ -34,14 +30,17 @@ func topologicalSort(flags map[string]*evaluation.Flag, flagKeys []string) ([]*e
 	return result, nil
 }
 
-func parentTraversal(flagKey string, available map[string]*evaluation.Flag, path []string) ([]*evaluation.Flag, error) {
-	flag := available[flagKey]
+func parentTraversal(flagKey string, flags map[string]*evaluation.Flag, visited map[string]struct{}, path []string) ([]*evaluation.Flag, error) {
+	flag := flags[flagKey]
 	if flag == nil {
+		return nil, nil
+	}
+	if _, done := visited[flagKey]; done {
 		return nil, nil
 	}
 	dependencies := flag.Dependencies
 	if len(dependencies) == 0 {
-		delete(available, flagKey)
+		visited[flagKey] = struct{}{}
 		return []*evaluation.Flag{flag}, nil
 	}
 	path = append(path, flagKey)
@@ -50,7 +49,7 @@ func parentTraversal(flagKey string, available map[string]*evaluation.Flag, path
 		if contains(path, parentKey) {
 			return nil, fmt.Errorf("detected a cycle between flags %v", path)
 		}
-		traversal, err := parentTraversal(parentKey, available, path)
+		traversal, err := parentTraversal(parentKey, flags, visited, path)
 		if err != nil {
 			return nil, err
 		}
@@ -59,6 +58,6 @@ func parentTraversal(flagKey string, available map[string]*evaluation.Flag, path
 		}
 	}
 	result = append(result, flag)
-	delete(available, flagKey)
+	visited[flagKey] = struct{}{}
 	return result, nil
 }
