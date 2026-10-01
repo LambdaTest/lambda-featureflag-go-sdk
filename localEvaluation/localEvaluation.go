@@ -111,7 +111,8 @@ func InitializeWithConfig(conf local.Config, deploymentKey string) {
 	}
 }
 
-func fetch(user UserProperties) (map[string]experiment.Variant, error) {
+// fetch evaluates only flagKeys (and the flags they depend on); no keys evaluates every flag.
+func fetch(user UserProperties, flagKeys ...string) (map[string]experiment.Variant, error) {
 	userProp := map[string]interface{}{
 		"org_id":            user.OrgId,
 		"org_name":          user.OrgName,
@@ -128,7 +129,7 @@ func fetch(user UserProperties) (map[string]experiment.Variant, error) {
 		UserProperties: userProp,
 	}
 
-	result, err := client.EvaluateV2(&expUser, []string{})
+	result, err := client.EvaluateV2(&expUser, flagKeys)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +137,7 @@ func fetch(user UserProperties) (map[string]experiment.Variant, error) {
 }
 
 func getValue(flagName string, user UserProperties) Variant {
-	result, _ := fetch(user)
+	result, _ := fetch(user, flagName)
 	if result != nil && len(result) != 0 {
 		if value, ok := result[flagName]; ok {
 			return Variant{
