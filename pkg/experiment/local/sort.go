@@ -7,16 +7,15 @@ import (
 
 func topologicalSort(flags map[string]*evaluation.Flag, flagKeys []string) ([]*evaluation.Flag, error) {
 	result := make([]*evaluation.Flag, 0)
+	// Track sorted flags instead of copying the flags map
+	visited := make(map[string]bool)
 	// Get the starting keys
 	startingKeys := flagKeys
 	if len(startingKeys) == 0 {
-		startingKeys = make([]string, 0, len(flags))
 		for k := range flags {
 			startingKeys = append(startingKeys, k)
 		}
 	}
-	// Track sorted flags instead of copying the flags map, so evaluating a few flags does not cost a copy of all of them
-	visited := make(map[string]struct{}, len(startingKeys))
 	// Sort into result
 	for _, flagKey := range startingKeys {
 		traversal, err := parentTraversal(flagKey, flags, visited, []string{})
@@ -30,17 +29,14 @@ func topologicalSort(flags map[string]*evaluation.Flag, flagKeys []string) ([]*e
 	return result, nil
 }
 
-func parentTraversal(flagKey string, flags map[string]*evaluation.Flag, visited map[string]struct{}, path []string) ([]*evaluation.Flag, error) {
+func parentTraversal(flagKey string, flags map[string]*evaluation.Flag, visited map[string]bool, path []string) ([]*evaluation.Flag, error) {
 	flag := flags[flagKey]
-	if flag == nil {
-		return nil, nil
-	}
-	if _, done := visited[flagKey]; done {
+	if flag == nil || visited[flagKey] {
 		return nil, nil
 	}
 	dependencies := flag.Dependencies
 	if len(dependencies) == 0 {
-		visited[flagKey] = struct{}{}
+		visited[flagKey] = true
 		return []*evaluation.Flag{flag}, nil
 	}
 	path = append(path, flagKey)
@@ -58,6 +54,6 @@ func parentTraversal(flagKey string, flags map[string]*evaluation.Flag, visited 
 		}
 	}
 	result = append(result, flag)
-	visited[flagKey] = struct{}{}
+	visited[flagKey] = true
 	return result, nil
 }
